@@ -70,15 +70,26 @@
     <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const projId = urlParams.get('proj_id') || 1;
-        const section = urlParams.get('section') || 'Общие';
-        const date = urlParams.get('date') || 'Сегодня';
+        // Безопасно считываем параметры из URL с защитой от сбоев
+        let projId = 1;
+        let section = 'Общие';
+        let date = 'Сегодня';
+
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('proj_id')) projId = urlParams.get('proj_id');
+            if (urlParams.has('section')) section = urlParams.get('section');
+            if (urlParams.has('date')) date = urlParams.get('date');
+        } catch (e) {
+            console.log("Ошибка чтения URL параметров, используются значения по умолчанию");
+        }
 
         function submitOrder() {
             try {
                 const tg = window.Telegram.WebApp;
-                tg.expand();
+                if (tg && typeof tg.expand === 'function') {
+                    tg.expand();
+                }
 
                 const cards = document.querySelectorAll('.item-card');
                 if (cards.length === 0) {
@@ -118,13 +129,15 @@
                     items: items
                 };
 
-                // Отправляем данные в бот
-                tg.sendData(JSON.stringify(payload));
-                
-                // Принудительно закрываем окно (актуально для десктопа)
-                setTimeout(() => {
-                    tg.close();
-                }, 200);
+                // Отправляем данные в бот, если доступно
+                if (tg && typeof tg.sendData === 'function') {
+                    tg.sendData(JSON.stringify(payload));
+                    setTimeout(() => {
+                        if (typeof tg.close === 'function') tg.close();
+                    }, 200);
+                } else {
+                    alert("Ошибка: Telegram WebApp недоступен.");
+                }
                 
             } catch (err) {
                 alert("Ошибка отправки: " + err.message);
