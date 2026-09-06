@@ -118,7 +118,13 @@
                     items: items
                 };
 
+                // Отправляем данные в бот
                 tg.sendData(JSON.stringify(payload));
+                
+                // Принудительно закрываем окно (актуально для десктопа)
+                setTimeout(() => {
+                    tg.close();
+                }, 200);
                 
             } catch (err) {
                 alert("Ошибка отправки: " + err.message);
