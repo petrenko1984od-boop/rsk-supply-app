@@ -70,7 +70,6 @@
     <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
 
     <script>
-        // Безопасно считываем и декодируем кириллицу из параметров URL
         let projId = 1;
         let section = 'Общие';
         let date = 'Сегодня';
@@ -88,12 +87,6 @@
             try {
                 const tg = window.Telegram.WebApp;
                 
-                // Проверяем, инициализирован ли Telegram WebApp
-                if (!tg || !tg.initData) {
-                    alert("⚠️ Внимание: Приложение открыто не через Telegram WebApp! Функция sendData не сработает. Откройте приложение по кнопке из бота.");
-                    return;
-                }
-
                 if (typeof tg.expand === 'function') {
                     tg.expand();
                 }
@@ -136,15 +129,22 @@
                     items: items
                 };
 
+                // Отправляем данные в бот
                 if (typeof tg.sendData === 'function') {
                     tg.sendData(JSON.stringify(payload));
-                    // Окно закроется автоматически, а бот пришлет подтверждение
                 } else {
-                    alert("❌ Ошибка: функция tg.sendData недоступна в этой версии Telegram.");
+                    alert("Ошибка: sendData недоступна.");
                 }
+
+                // Принудительно закрываем окно через небольшой тайм-аут
+                setTimeout(() => {
+                    if (typeof tg.close === 'function') {
+                        tg.close();
+                    }
+                }, 300);
                 
             } catch (err) {
-                alert("❌ Критическая ошибка отправки: " + err.message);
+                alert("Ошибка отправки: " + err.message);
             }
         }
     </script>
