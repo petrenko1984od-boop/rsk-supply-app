@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSK Odessa - Снабжение</title>
+    <title>Заявка на материалы</title>
+    <!-- Подключаем официальный скрипт Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -11,28 +12,44 @@
             background-color: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #222222);
             margin: 0;
-            padding: 15px;
+            padding: 16px;
         }
-        .item-card {
+        h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .info-block {
             background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .item-row {
+            background: var(--tg-theme-secondary-bg-color, #f9f9f9);
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 10px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        input, select, textarea {
+        input, select {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            margin-bottom: 10px;
+            padding: 8px 10px;
+            margin: 4px 0 10px 0;
             box-sizing: border-box;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            font-size: 14px;
+        }
+        label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #777);
         }
         button {
             width: 100%;
             padding: 12px;
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
             border-radius: 8px;
             font-size: 16px;
@@ -40,112 +57,140 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        .btn-add {
+            background-color: var(--tg-theme-secondary-bg-color, #e0e0e0);
+            color: var(--tg-theme-text-color, #000);
+        }
+        .btn-submit {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #fff);
+            margin-bottom: 30px;
+        }
+        .btn-remove {
+            background-color: #ff3b30;
+            color: white;
+            padding: 6px;
+            font-size: 12px;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
 
-    <h2>RSK Odessa</h2>
-    <div id="items-container">
-        <div class="item-card">
-            <label>Название материала *</label>
-            <input type="text" class="mat-name" placeholder="Например: Цемент М500">
-            
-            <label>Единица измерения</label>
-            <select class="mat-unit">
-                <option value="шт">шт</option>
-                <option value="меш">меш</option>
-                <option value="т">т</option>
-                <option value="м3">м3</option>
-                <option value="м.п.">м.п.</option>
-            </select>
-            
-            <label>Количество *</label>
-            <input type="text" class="mat-qty" placeholder="Введите количество">
-            
-            <label>Примечание</label>
-            <input type="text" class="mat-note" placeholder="Марка, цвет, пожелания...">
-        </div>
+    <h2>📦 Новая заявка на материалы</h2>
+    
+    <div class="info-block" id="order-info">
+        Загрузка данных объекта...
     </div>
 
-    <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
+    <div id="items-container">
+        <!-- Сюда будут добавляться строки материалов -->
+    </div>
+
+    <button type="button" class="btn-add" onclick="addItemRow()">➕ Добавить материал</button>
+    <button type="button" class="btn-submit" onclick="submitOrder()">✅ Отправить заявку в снабжение</button>
 
     <script>
-        let projId = 1;
-        let section = 'Общие';
-        let date = 'Сегодня';
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand(); // Растянуть на весь экран
 
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('proj_id')) projId = urlParams.get('proj_id');
-            if (urlParams.has('section')) section = decodeURIComponent(urlParams.get('section'));
-            if (urlParams.has('date')) date = decodeURIComponent(urlParams.get('date'));
-        } catch (e) {
-            console.log("Ошибка чтения URL параметров");
+        // Читаем параметры, которые передал бот через URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const projId = urlParams.get('proj_id');
+        const section = urlParams.get('section');
+        const date = urlParams.get('date');
+
+        // Выводим информацию о заказе на экран
+        document.getElementById('order-info').innerHTML = `
+            📅 <b>Дата:</b> ${date || 'Не указана'}<br>
+            📂 <b>Раздел:</b> ${section || 'Не указан'}
+        `;
+
+        // При загрузке страницы сразу добавляем одну пустую строчку для ввода
+        window.onload = function() {
+            addItemRow();
+        };
+
+        // Функция добавления новой строки материала
+        function addItemRow() {
+            const container = document.getElementById('items-container');
+            const rowId = Date.now();
+            
+            const div = document.createElement('div');
+            div.className = 'item-row';
+            div.id = `row-${rowId}`;
+            div.innerHTML = `
+                <label>Наименование материала:</label>
+                <input type="text" class="mat-name" placeholder="Например: Цемент М500">
+                
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex: 1;">
+                        <label>Количество:</label>
+                        <input type="number" class="mat-qty" placeholder="0" step="any">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Ед. изм:</label>
+                        <select class="mat-unit">
+                            <option value="шт">шт</option>
+                            <option value="меш">меш</option>
+                            <option value="м2">м²</option>
+                            <option value="м3">м³</option>
+                            <option value="п.м">п.м</option>
+                            <option value="т">т</option>
+                            <option value="кг">кг</option>
+                            <option value="л">л</option>
+                            <option value="компл">компл</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label>Примечание (опционально):</label>
+                <input type="text" class="mat-note" placeholder="Например: срочно, с доставкой">
+
+                <button type="button" class="btn-remove" onclick="document.getElementById('row-${rowId}').remove()">🗑 Удалить позицию</button>
+            `;
+            container.appendChild(div);
         }
 
+        // Функция отправки данных в бота
         function submitOrder() {
-            try {
-                const tg = window.Telegram.WebApp;
-                
-                if (typeof tg.expand === 'function') {
-                    tg.expand();
-                }
+            const rows = document.querySelectorAll('.item-row');
+            const items = [];
 
-                const cards = document.querySelectorAll('.item-card');
-                if (cards.length === 0) {
-                    alert('Добавьте хотя бы один материал!');
-                    return;
-                }
+            // Собираем данные из всех строчек
+            rows.forEach(row => {
+                const name = row.querySelector('.mat-name').value.trim();
+                const qty = row.querySelector('.mat-qty').value.trim();
+                const unit = row.querySelector('.mat-unit').value;
+                const note = row.querySelector('.mat-note').value.trim();
 
-                let items = [];
-                for (let card of cards) {
-                    let nameField = card.querySelector('.mat-name');
-                    let qtyField = card.querySelector('.mat-qty');
-                    let unitField = card.querySelector('.mat-unit');
-                    let noteField = card.querySelector('.mat-note');
-                    
-                    let name = nameField ? nameField.value.trim() : '';
-                    let unit = unitField ? unitField.value : 'шт';
-                    let qty = qtyField ? qtyField.value.trim().replace(',', '.') : '';
-                    let note = noteField ? noteField.value.trim() : '';
-
-                    if (!name || !qty) {
-                        alert('Заполните название и количество для всех позиций!');
-                        return;
-                    }
-
-                    items.push({ 
-                        name: name, 
-                        unit: unit, 
-                        qty: parseFloat(qty), 
-                        note: note 
+                if (name && qty) {
+                    items.push({
+                        name: name,
+                        qty: parseFloat(qty),
+                        unit: unit,
+                        note: note
                     });
                 }
+            });
 
-                const payload = {
-                    proj_id: projId,
-                    section: section,
-                    date: date,
-                    items: items
-                };
-
-                // Отправляем данные в бот
-                if (typeof tg.sendData === 'function') {
-                    tg.sendData(JSON.stringify(payload));
-                } else {
-                    alert("Ошибка: sendData недоступна.");
-                }
-
-                // Принудительно закрываем окно через небольшой тайм-аут
-                setTimeout(() => {
-                    if (typeof tg.close === 'function') {
-                        tg.close();
-                    }
-                }, 300);
-                
-            } catch (err) {
-                alert("Ошибка отправки: " + err.message);
+            if (items.length === 0) {
+                alert('Пожалуйста, добавьте хотя бы один материал и укажите его количество!');
+                return;
             }
+
+            // Формируем итоговый объект для отправки
+            const payload = {
+                proj_id: projId ? parseInt(projId) : 0,
+                section: section || 'Общий раздел',
+                date: date || 'Не указана',
+                items: items
+            };
+
+            // Передаем данные боту и закрываем мини-приложение
+            Telegram.WebApp.sendData(JSON.stringify(payload));
+            Telegram.WebApp.close();
         }
     </script>
 </body>
