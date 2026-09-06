@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSK Odessa - Снабжение</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
+            margin: 0;
+            padding: 15px;
+        }
+        .item-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>RSK Odessa</h2>
+    <div id="items-container">
+        <div class="item-card">
+            <label>Название материала *</label>
+            <input type="text" class="mat-name" placeholder="Например: Цемент М500">
+            
+            <label>Единица измерения</label>
+            <select class="mat-unit">
+                <option value="шт">шт</option>
+                <option value="меш">меш</option>
+                <option value="т">т</option>
+                <option value="м3">м3</option>
+                <option value="м.п.">м.п.</option>
+            </select>
+            
+            <label>Количество *</label>
+            <input type="text" class="mat-qty" placeholder="Введите количество">
+            
+            <label>Примечание</label>
+            <input type="text" class="mat-note" placeholder="Марка, цвет, пожелания...">
+        </div>
+    </div>
+
+    <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const projId = urlParams.get('proj_id') || 1;
+        const section = urlParams.get('section') || 'Общие';
+        const date = urlParams.get('date') || 'Сегодня';
+
+        function submitOrder() {
+            try {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+
+                const cards = document.querySelectorAll('.item-card');
+                if (cards.length === 0) {
+                    alert('Добавьте хотя бы один материал!');
+                    return;
+                }
+
+                let items = [];
+                for (let card of cards) {
+                    let nameField = card.querySelector('.mat-name');
+                    let qtyField = card.querySelector('.mat-qty');
+                    let unitField = card.querySelector('.mat-unit');
+                    let noteField = card.querySelector('.mat-note');
+                    
+                    let name = nameField ? nameField.value.trim() : '';
+                    let unit = unitField ? unitField.value : 'шт';
+                    let qty = qtyField ? qtyField.value.trim().replace(',', '.') : '';
+                    let note = noteField ? noteField.value.trim() : '';
+
+                    if (!name || !qty) {
+                        alert('Заполните название и количество для всех позиций!');
+                        return;
+                    }
+
+                    items.push({ 
+                        name: name, 
+                        unit: unit, 
+                        qty: parseFloat(qty), 
+                        note: note 
+                    });
+                }
+
+                const payload = {
+                    proj_id: projId,
+                    section: section,
+                    date: date,
+                    items: items
+                };
+
+                tg.sendData(JSON.stringify(payload));
+                
+            } catch (err) {
+                alert("Ошибка отправки: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
