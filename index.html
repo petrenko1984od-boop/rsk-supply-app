@@ -6,169 +6,71 @@
     <title>RSK Odessa - Снабжение</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: var(--tg-theme-bg-color, #f4f6f8);
-            --text-color: var(--tg-theme-text-color, #222222);
-            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
-            --button-color: var(--tg-theme-button-color, #2481cc);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #999999);
-            --border-color: #e0e0e0;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
             margin: 0;
-            padding: 16px;
-            box-sizing: border-box;
+            padding: 15px;
         }
-
-        h2 {
-            font-size: 20px;
-            margin-bottom: 4px;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            font-size: 13px;
-            color: var(--hint-color);
-            margin-bottom: 16px;
-        }
-
-        #items-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
         .item-card {
-            background: var(--card-bg);
-            padding: 14px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            position: relative;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--button-color);
-        }
-
-        .btn-delete {
-            background: none;
-            border: none;
-            color: #ff3b30;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--hint-color);
-            margin-bottom: 4px;
-            margin-top: 8px;
-        }
-
-        label:first-of-type {
-            margin-top: 0;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px 12px;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 12px;
             border-radius: 8px;
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
+            margin-bottom: 10px;
         }
-
-        input:focus, select:focus {
-            border-color: var(--button-color);
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
-
-        .row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .col-qty {
-            flex: 1.2;
-        }
-
-        .col-unit {
-            flex: 1;
-        }
-
-        .btn-add {
+        button {
             width: 100%;
             padding: 12px;
-            background-color: transparent;
-            color: var(--button-color);
-            border: 2px dashed var(--button-color);
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: background-color 0.2s;
-        }
-
-        .btn-add:active {
-            background-color: rgba(36, 129, 204, 0.08);
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--button-color);
-            color: var(--button-text);
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
-            margin-bottom: 20px;
-        }
-
-        .btn-submit:active {
-            opacity: 0.9;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
     <h2>RSK Odessa</h2>
-    <div class="subtitle" id="subtitle-info">Заказ материалов на объект</div>
-
     <div id="items-container">
-        <!-- Карточка товара генерируется динамически -->
+        <div class="item-card">
+            <label>Название материала *</label>
+            <input type="text" class="mat-name" placeholder="Например: Цемент М500">
+            
+            <label>Единица измерения</label>
+            <select class="mat-unit">
+                <option value="шт">шт</option>
+                <option value="меш">меш</option>
+                <option value="т">т</option>
+                <option value="м3">м3</option>
+                <option value="м.п.">м.п.</option>
+            </select>
+            
+            <label>Количество *</label>
+            <input type="text" class="mat-qty" placeholder="Введите количество">
+            
+            <label>Примечание</label>
+            <input type="text" class="mat-note" placeholder="Марка, цвет, пожелания...">
+        </div>
     </div>
 
-    <button class="btn-add" onclick="addItemCard()">➕ Добавить еще материал</button>
-    <button class="btn-submit" onclick="submitOrder()">✅ Отправить заявку в бот</button>
+    <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        try { tg.expand(); } catch (e) {}
-
-        // Считываем параметры из URL
+        // Безопасно считываем и декодируем кириллицу из параметров URL
         let projId = 1;
         let section = 'Общие';
         let date = 'Сегодня';
@@ -178,85 +80,24 @@
             if (urlParams.has('proj_id')) projId = urlParams.get('proj_id');
             if (urlParams.has('section')) section = decodeURIComponent(urlParams.get('section'));
             if (urlParams.has('date')) date = decodeURIComponent(urlParams.get('date'));
-            
-            document.getElementById('subtitle-info').innerText = `${section} • Поставка: ${date}`;
-        } catch (e) {}
-
-        // Шаблон единиц измерения
-        const unitsList = ['шт', 'меш', 'т', 'м3', 'м.п.', 'кг', 'л', 'комл'];
-
-        // Добавление первой карточки при загрузке
-        window.onload = function() {
-            addItemCard();
-        };
-
-        function addItemCard() {
-            const container = document.getElementById('items-container');
-            const index = container.children.length + 1;
-
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            
-            let unitsOptions = unitsList.map(u => `<option value="${u}">${u}</option>`).join('');
-
-            card.innerHTML = `
-                <div class="card-header">
-                    <span>Позиция #${index}</span>
-                    ${index > 1 ? '<button class="btn-delete" onclick="removeItemCard(this)">🗑️ Удалить</button>' : ''}
-                </div>
-                <label>Название материала *</label>
-                <input type="text" class="mat-name" placeholder="Например: Цемент М500">
-                
-                <div class="row">
-                    <div class="col-qty">
-                        <label>Количество *</label>
-                        <input type="text" class="mat-qty" placeholder="0.00" inputmode="decimal" oninput="validateQty(this)">
-                    </div>
-                    <div class="col-unit">
-                        <label>Ед. изм.</label>
-                        <select class="mat-unit">
-                            ${unitsOptions}
-                        </select>
-                    </div>
-                </div>
-                
-                <label>Примечание</label>
-                <input type="text" class="mat-note" placeholder="Марка, цвет, пожелания...">
-            `;
-
-            container.appendChild(card);
-            updateCardHeaders();
-        }
-
-        function removeItemCard(button) {
-            const card = button.closest('.item-card');
-            card.remove();
-            updateCardHeaders();
-        }
-
-        function updateCardHeaders() {
-            const cards = document.querySelectorAll('.item-card');
-            cards.forEach((card, idx) => {
-                const header = card.querySelector('.card-header span');
-                if (header) header.innerText = `Позиция #${idx + 1}`;
-            });
-        }
-
-        // Валидация количества: разрешаем только цифры, точки и запятые
-        function validateQty(input) {
-            // Заменяем запятую на точку для удобства
-            let val = input.value.replace(',', '.');
-            // Оставляем только цифры и одну точку
-            val = val.replace(/[^0-9.]/g, '');
-            let parts = val.split('.');
-            if (parts.length > 2) {
-                val = parts[0] + '.' + parts.slice(1).join('');
-            }
-            input.value = val;
+        } catch (e) {
+            console.log("Ошибка чтения URL параметров");
         }
 
         function submitOrder() {
             try {
+                const tg = window.Telegram.WebApp;
+                
+                // Проверяем, инициализирован ли Telegram WebApp
+                if (!tg || !tg.initData) {
+                    alert("⚠️ Внимание: Приложение открыто не через Telegram WebApp! Функция sendData не сработает. Откройте приложение по кнопке из бота.");
+                    return;
+                }
+
+                if (typeof tg.expand === 'function') {
+                    tg.expand();
+                }
+
                 const cards = document.querySelectorAll('.item-card');
                 if (cards.length === 0) {
                     alert('Добавьте хотя бы один материал!');
@@ -272,7 +113,7 @@
                     
                     let name = nameField ? nameField.value.trim() : '';
                     let unit = unitField ? unitField.value : 'шт';
-                    let qty = qtyField ? qtyField.value.trim() : '';
+                    let qty = qtyField ? qtyField.value.trim().replace(',', '.') : '';
                     let note = noteField ? noteField.value.trim() : '';
 
                     if (!name || !qty) {
@@ -295,17 +136,15 @@
                     items: items
                 };
 
-                if (tg && typeof tg.sendData === 'function') {
+                if (typeof tg.sendData === 'function') {
                     tg.sendData(JSON.stringify(payload));
-                    setTimeout(() => {
-                        if (typeof tg.close === 'function') tg.close();
-                    }, 200);
+                    // Окно закроется автоматически, а бот пришлет подтверждение
                 } else {
-                    alert("Ошибка: Telegram WebApp недоступен.");
+                    alert("❌ Ошибка: функция tg.sendData недоступна в этой версии Telegram.");
                 }
                 
             } catch (err) {
-                alert("Ошибка отправки: " + err.message);
+                alert("❌ Критическая ошибка отправки: " + err.message);
             }
         }
     </script>
