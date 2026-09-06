@@ -70,7 +70,7 @@
     <button onclick="submitOrder()">✅ Отправить заявку в бот</button>
 
     <script>
-        // Безопасно считываем параметры из URL с защитой от сбоев
+        // Безопасно считываем и декодируем кириллицу из параметров URL
         let projId = 1;
         let section = 'Общие';
         let date = 'Сегодня';
@@ -78,10 +78,10 @@
         try {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('proj_id')) projId = urlParams.get('proj_id');
-            if (urlParams.has('section')) section = urlParams.get('section');
-            if (urlParams.has('date')) date = urlParams.get('date');
+            if (urlParams.has('section')) section = decodeURIComponent(urlParams.get('section'));
+            if (urlParams.has('date')) date = decodeURIComponent(urlParams.get('date'));
         } catch (e) {
-            console.log("Ошибка чтения URL параметров, используются значения по умолчанию");
+            console.log("Ошибка чтения URL параметров");
         }
 
         function submitOrder() {
@@ -129,7 +129,6 @@
                     items: items
                 };
 
-                // Отправляем данные в бот, если доступно
                 if (tg && typeof tg.sendData === 'function') {
                     tg.sendData(JSON.stringify(payload));
                     setTimeout(() => {
