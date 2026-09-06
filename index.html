@@ -7,35 +7,83 @@
     <title>Заявка на материалы</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 16px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
-        .item-row { background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        input, select { width: 100%; padding: 8px; margin: 4px 0 10px 0; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .btn-add { background: #e0e0e0; }
-        .btn-submit { background: #2481cc; color: white; margin-top: 15px; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            padding: 16px; 
+            background: var(--tg-theme-bg-color, #ffffff); 
+            color: var(--tg-theme-text-color, #222222); 
+            margin: 0;
+        }
+        h3 { font-size: 18px; margin-top: 0; }
+        .info-block { 
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0); 
+            padding: 10px 14px; 
+            border-radius: 8px; 
+            margin-bottom: 16px; 
+            font-size: 13px; 
+        }
+        .item-row { 
+            background: var(--tg-theme-secondary-bg-color, #f9f9f9); 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 12px; 
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 4px 0 10px 0; 
+            box-sizing: border-box; 
+            border: 1px solid #ccc; 
+            border-radius: 6px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            font-size: 14px;
+        }
+        label { font-size: 12px; color: var(--tg-theme-hint-color, #777); }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px;
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 8px; 
+        }
+        .btn-add { background: var(--tg-theme-secondary-bg-color, #e0e0e0); color: var(--tg-theme-text-color, #000); }
+        .btn-submit { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); margin-top: 16px; margin-bottom: 30px; }
+        .btn-remove { background: #ff3b30; color: white; padding: 6px; font-size: 12px; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <h3>📦 Создание заявки</h3>
-    <div id="info" style="font-size: 13px; margin-bottom: 15px; opacity: 0.8;">Загрузка параметров...</div>
+    <div class="info-block" id="info">Загрузка параметров...</div>
 
     <div id="items-container"></div>
 
-    <button type="button" class="btn-add" onclick="addItemRow()">➕ Добавить позицию</button>
+    <button type="button" class="btn-add" onclick="addItemRow()">➕ Добавить материал</button>
     <button type="button" class="btn-submit" onclick="submitOrder()">✅ Отправить заявку боту</button>
 
     <script>
+        // Инициализация Telegram Web App
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
+        // Считываем параметры из адресной строки, переданные ботом
         const urlParams = new URLSearchParams(window.location.search);
         const projId = urlParams.get('proj_id');
         const section = urlParams.get('section');
         const date = urlParams.get('date');
 
-        document.getElementById('info').innerHTML = `<b>Объект ID:</b> ${projId} | <b>Раздел:</b> ${section} | <b>Дата:</b> ${date}`;
+        document.getElementById('info').innerHTML = `
+            🏗 <b>Объект ID:</b> ${projId || 'не указан'}<br>
+            📂 <b>Раздел:</b> ${section || 'не указан'}<br>
+            📅 <b>Дата:</b> ${date || 'не указана'}
+        `;
 
+        // При открытии сайта автоматически добавляем одну строчку для ввода
         window.onload = function() {
             addItemRow();
         };
@@ -47,54 +95,74 @@
             div.className = 'item-row';
             div.id = `row-${id}`;
             div.innerHTML = `
-                <label>Материал:</label>
-                <input type="text" class="mat-name" placeholder="Например: Цемент">
+                <label>Наименование материала:</label>
+                <input type="text" class="mat-name" placeholder="Например: Цемент М500">
+                
                 <div style="display:flex; gap:8px;">
-                    <div style="flex:1;"><label>Кол-во:</label><input type="number" class="mat-qty" value="1"></div>
-                    <div style="flex:1;"><label>Ед:</label>
+                    <div style="flex:1;">
+                        <label>Количество:</label>
+                        <input type="number" class="mat-qty" placeholder="1" step="any" value="1">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Ед. изм:</label>
                         <select class="mat-unit">
                             <option value="шт">шт</option>
                             <option value="меш">меш</option>
-                            <option value="м3">м3</option>
+                            <option value="м2">м²</option>
+                            <option value="м3">м³</option>
                             <option value="т">т</option>
+                            <option value="кг">кг</option>
+                            <option value="л">л</option>
+                            <option value="компл">компл</option>
                         </select>
                     </div>
                 </div>
-                <button type="button" style="background:#ff3b30; color:white; padding:4px; font-size:11px;" onclick="document.getElementById('row-${id}').remove()">Удалить</button>
+                <button type="button" class="btn-remove" onclick="document.getElementById('row-${id}').remove()">🗑 Удалить позицию</button>
             `;
             container.appendChild(div);
         }
 
         function submitOrder() {
-            const rows = document.querySelectorAll('.item-row');
-            const items = [];
+            try {
+                const rows = document.querySelectorAll('.item-row');
+                const items = [];
 
-            rows.forEach(row => {
-                const name = row.querySelector('.mat-name').value.trim();
-                const qty = row.querySelector('.mat-qty').value.trim();
-                const unit = row.querySelector('.mat-unit').value;
-                if (name) {
-                    items.push({ name: name, qty: parseFloat(qty) || 1, unit: unit, note: "" });
+                rows.forEach(row => {
+                    const name = row.querySelector('.mat-name').value.trim();
+                    const qty = row.querySelector('.mat-qty').value.trim();
+                    const unit = row.querySelector('.mat-unit').value;
+                    
+                    if (name) {
+                        items.push({ 
+                            name: name, 
+                            qty: parseFloat(qty) || 1, 
+                            unit: unit, 
+                            note: "" 
+                        });
+                    }
+                });
+
+                if (items.length === 0) {
+                    alert('Пожалуйста, заполните название хотя бы для одного материала!');
+                    return;
                 }
-            });
 
-            if (items.length === 0) {
-                alert('Добавьте хотя бы один материал!');
-                return;
+                const payload = {
+                    proj_id: projId ? parseInt(projId) : 0,
+                    section: section ? decodeURIComponent(section) : "Общий раздел",
+                    date: date || "Не указана",
+                    items: items
+                };
+
+                // Проверяем доступность Telegram WebApp и отправляем данные
+                if (window.Telegram && window.Telegram.WebApp) {
+                    Telegram.WebApp.sendData(JSON.stringify(payload));
+                } else {
+                    alert('Ошибка: мини-приложение запущено не внутри Telegram.');
+                }
+            } catch (err) {
+                alert('Произошла ошибка при отправке: ' + err.message);
             }
-
-            const payload = {
-                proj_id: projId ? parseInt(projId) : 0,
-                section: section || "Общий раздел",
-                date: date || "Не указана",
-                items: items
-            };
-
-            // Проверка перед отправкой
-            console.log("Отправка данных:", payload);
-            
-            // Передаем данные боту
-            Telegram.WebApp.sendData(JSON.stringify(payload));
         }
     </script>
 </body>
