@@ -25,7 +25,7 @@
                 <input type="text" id="mat-qty" required placeholder="например, 100 м" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow">✅ Отправить в снабжение</button>
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow">✅ Отправить в снабжение</button>
             </div>
         </form>
     </div>
@@ -68,11 +68,23 @@
                 quantity: quantity
             };
 
+            // Блокируем кнопку на случай повторного нажатия
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = "⏳ Отправка...";
+
             if (tg && tg.sendData) {
-                // Отправляем данные боту. Telegram автоматически закроет WebApp после успешной отправки.
+                // Отправляем данные боту
                 tg.sendData(JSON.stringify(orderData));
+                
+                // Делаем микро-паузу перед закрытием окна, чтобы данные успели уйти
+                setTimeout(() => {
+                    tg.close();
+                }, 300);
             } else {
                 alert('Ошибка: Telegram WebApp недоступен');
+                btn.disabled = false;
+                btn.innerText = "✅ Отправить в снабжение";
             }
         }
     </script>
