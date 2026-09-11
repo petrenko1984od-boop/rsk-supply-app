@@ -1,169 +1,127 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заявка на материалы</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>RSK Odessa - Диаграмма Ганта</title>
+    <!-- Подключаем стили Frappe Gantt -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.css">
+    <!-- Подключаем Tailwind CSS для красивого оформления интерфейса -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            padding: 16px; 
-            background: var(--tg-theme-bg-color, #ffffff); 
-            color: var(--tg-theme-text-color, #222222); 
-            margin: 0;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
         }
-        h3 { font-size: 18px; margin-top: 0; }
-        .info-block { 
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0); 
-            padding: 10px 14px; 
-            border-radius: 8px; 
-            margin-bottom: 16px; 
-            font-size: 13px; 
+        /* Кастомизация графика под дизайн Telegram */
+        .gantt .bar-progress {
+            fill: #3b82f6;
         }
-        .item-row { 
-            background: var(--tg-theme-secondary-bg-color, #f9f9f9); 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-bottom: 12px; 
-            border: 1px solid rgba(0,0,0,0.05);
+        .gantt .bar {
+            fill: #93c5fd;
         }
-        input, select { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 4px 0 10px 0; 
-            box-sizing: border-box; 
-            border: 1px solid #ccc; 
-            border-radius: 6px;
-            background: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
-            font-size: 14px;
+        .gantt .bar-wrapper:hover .bar {
+            fill: #60a5fa;
         }
-        label { font-size: 12px; color: var(--tg-theme-hint-color, #777); }
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 15px;
-            font-weight: bold; 
-            cursor: pointer; 
-            margin-top: 8px; 
-        }
-        .btn-add { background: var(--tg-theme-secondary-bg-color, #e0e0e0); color: var(--tg-theme-text-color, #000); }
-        .btn-submit { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); margin-top: 16px; margin-bottom: 30px; }
-        .btn-remove { background: #ff3b30; color: white; padding: 6px; font-size: 12px; margin-top: 4px; }
     </style>
 </head>
-<body>
+<body class="p-4">
 
-    <h3>📦 Создание заявки</h3>
-    <div class="info-block" id="info">Загрузка параметров...</div>
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">🏗 График выполнения проектов</h1>
+                <p class="text-sm text-gray-500">Управление сроками и этапами строительства (RSK Odessa)</p>
+            </div>
+            <!-- Переключатели масштаба времени -->
+            <div class="flex gap-2 mt-4 md:mt-0">
+                <button onclick="gantt.change_view_mode('Day')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-blue-500 hover:text-white rounded-lg transition">День</button>
+                <button onclick="gantt.change_view_mode('Week')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-blue-500 hover:text-white rounded-lg transition">Неделя</button>
+                <button onclick="gantt.change_view_mode('Month')" class="px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-blue-500 hover:text-white rounded-lg transition">Месяц</button>
+            </div>
+        </div>
 
-    <div id="items-container"></div>
+        <!-- Контейнер для самой диаграммы Ганта -->
+        <div class="overflow-x-auto border rounded-lg p-2 bg-white">
+            <svg id="gantt"></svg>
+        </div>
+        
+        <div class="mt-4 text-xs text-gray-400 text-center">
+            Нажмите на задачу на графике, чтобы посмотреть подробности.
+        </div>
+    </div>
 
-    <button type="button" class="btn-add" onclick="addItemRow()">➕ Добавить материал</button>
-    <button type="button" class="btn-submit" onclick="submitOrder()">✅ Отправить заявку боту</button>
-
+    <!-- Подключаем библиотеку Frappe Gantt -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js"></script>
     <script>
-        // Инициализация Telegram Web App
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-
-        // Считываем параметры из адресной строки, переданные ботом
-        const urlParams = new URLSearchParams(window.location.search);
-        const projId = urlParams.get('proj_id');
-        const section = urlParams.get('section');
-        const date = urlParams.get('date');
-
-        document.getElementById('info').innerHTML = `
-            🏗 <b>Объект ID:</b> ${projId || 'не указан'}<br>
-            📂 <b>Раздел:</b> ${section || 'не указан'}<br>
-            📅 <b>Дата:</b> ${date || 'не указана'}
-        `;
-
-        // При открытии сайта автоматически добавляем одну строчку для ввода
-        window.onload = function() {
-            addItemRow();
-        };
-
-        function addItemRow() {
-            const container = document.getElementById('items-container');
-            const id = Date.now();
-            const div = document.createElement('div');
-            div.className = 'item-row';
-            div.id = `row-${id}`;
-            div.innerHTML = `
-                <label>Наименование материала:</label>
-                <input type="text" class="mat-name" placeholder="Например: Цемент М500">
-                
-                <div style="display:flex; gap:8px;">
-                    <div style="flex:1;">
-                        <label>Количество:</label>
-                        <input type="number" class="mat-qty" placeholder="1" step="any" value="1">
-                    </div>
-                    <div style="flex:1;">
-                        <label>Ед. изм:</label>
-                        <select class="mat-unit">
-                            <option value="шт">шт</option>
-                            <option value="меш">меш</option>
-                            <option value="м2">м²</option>
-                            <option value="м3">м³</option>
-                            <option value="т">т</option>
-                            <option value="кг">кг</option>
-                            <option value="л">л</option>
-                            <option value="компл">компл</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="button" class="btn-remove" onclick="document.getElementById('row-${id}').remove()">🗑 Удалить позицию</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function submitOrder() {
-            try {
-                const rows = document.querySelectorAll('.item-row');
-                const items = [];
-
-                rows.forEach(row => {
-                    const name = row.querySelector('.mat-name').value.trim();
-                    const qty = row.querySelector('.mat-qty').value.trim();
-                    const unit = row.querySelector('.mat-unit').value;
-                    
-                    if (name) {
-                        items.push({ 
-                            name: name, 
-                            qty: parseFloat(qty) || 1, 
-                            unit: unit, 
-                            note: "" 
-                        });
-                    }
-                });
-
-                if (items.length === 0) {
-                    alert('Пожалуйста, заполните название хотя бы для одного материала!');
-                    return;
-                }
-
-                const payload = {
-                    proj_id: projId ? parseInt(projId) : 0,
-                    section: section ? decodeURIComponent(section) : "Общий раздел",
-                    date: date || "Не указана",
-                    items: items
-                };
-
-                // Проверяем доступность Telegram WebApp и отправляем данные
-                if (window.Telegram && window.Telegram.WebApp) {
-                    Telegram.WebApp.sendData(JSON.stringify(payload));
-                } else {
-                    alert('Ошибка: мини-приложение запущено не внутри Telegram.');
-                }
-            } catch (err) {
-                alert('Произошла ошибка при отправке: ' + err.message);
+        // Данные задач по объектам (в будущем можно подтягивать через API из вашего бота/бд)
+        const tasks = [
+            {
+                id: '1',
+                name: 'Объект №1: Фундаментные работы',
+                start: '2026-09-01',
+                end: '2026-09-10',
+                progress: 80,
+                dependencies: ''
+            },
+            {
+                id: '2',
+                name: 'Объект №1: Возведение стен',
+                start: '2026-09-11',
+                end: '2026-09-25',
+                progress: 20,
+                dependencies: '1'
+            },
+            {
+                id: '3',
+                name: 'Объект №2: Монтаж металлокаркаса',
+                start: '2026-09-05',
+                end: '2026-09-18',
+                progress: 45,
+                dependencies: ''
+            },
+            {
+                id: '4',
+                name: 'Объект №3: Кровельные работы',
+                start: '2026-09-15',
+                end: '2026-09-30',
+                progress: 0,
+                dependencies: ''
+            },
+            {
+                id: '5',
+                name: 'Объект №4: Подвод коммуникаций',
+                start: '2026-09-20',
+                end: '2026-10-05',
+                progress: 0,
+                dependencies: ''
             }
-        }
+        ];
+
+        // Инициализация диаграммы Ганта
+        const gantt = new Gantt("#gantt", tasks, {
+            header_height: 50,
+            column_width: 30,
+            step: 24,
+            view_modes: ['Day', 'Week', 'Month'],
+            bar_height: 25,
+            bar_corner_radius: 4,
+            arrow_curve: 5,
+            padding: 18,
+            view_mode: 'Week',
+            language: 'ru',
+            // Обработчик клика по задаче
+            onClick: function (task) {
+                alert(`Задача: ${task.name}\nСроки: с ${task.start} по ${task.end}\nВыполнено: ${task.progress}%`);
+            },
+            // Обработчик изменения сроков прямо на графике (если пользователь перетащит полоску мышкой)
+            on_date_change: function(task, start, end) {
+                console.log(task, start, end);
+            },
+            on_progress_change: function(task, progress) {
+                console.log(task, progress);
+            }
+        });
     </script>
 </body>
 </html>
