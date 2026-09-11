@@ -1,35 +1,76 @@
-<script>
-    // Читаем параметры из URL, которые передал бот
-    const urlParams = new URLSearchParams(window.location.search);
-    const project = urlParams.get('proj') || 'Объект №1';
-    const section = urlParams.get('sec') || 'Общие';
-    const date = urlParams.get('date') || 'Срочно';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSK Odessa - Ввод материалов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем Telegram Web App скрипт -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-gray-50 p-4 max-w-lg mx-auto font-sans">
 
-    // Автоматически заполняем или подставляем их в форму заявки
-    document.getElementById('modal-project').value = project;
+    <div class="bg-white rounded-xl shadow-md p-6 mt-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-2">📦 Добавление материалов</h2>
+        <div id="info-block" class="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg mb-4">
+            <!-- Сюда подставятся данные из бота -->
+        </div>
 
-    function submitMaterial(event) {
-        event.preventDefault();
-        const material = document.getElementById('modal-material').value;
-        const qty = document.getElementById('modal-qty').value;
-        
-        // Данные готовой заявки
-        const requestData = {
-            project: project,
-            section: section,
-            date: date,
-            material: material,
-            quantity: qty,
-            status: "🔴 Новая"
-        };
+        <form id="material-form" onsubmit="submitMaterial(event)">
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Наименование материала:</label>
+                <input type="text" id="mat-name" required placeholder="например, Кабель ВВГнг 3х2.5" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Количество и ед. измерения:</label>
+                <input type="text" id="mat-qty" required placeholder="например, 100 м" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow">✅ Отправить в снабжение</button>
+            </div>
+        </form>
+    </div>
 
-        // Если открыто внутри Telegram Web App, отправляем данные боту
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.sendData(JSON.stringify(requestData));
-            window.Telegram.WebApp.close();
-        } else {
-            alert('Заявка успешно сформирована!');
-            console.log(requestData);
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Читаем параметры из URL, которые передал бот
+        const urlParams = new URLSearchParams(window.location.search);
+        const project = urlParams.get('proj') || 'Не указан';
+        const section = urlParams.get('sec') || 'Не указан';
+        const date = urlParams.get('date') || 'Срочно';
+
+        // Выводим информацию о выбранном объекте вверху формы
+        document.getElementById('info-block').innerHTML = `
+            🏢 Объект: <b>${project}</b><br>
+            📁 Раздел: <b>${section}</b><br>
+            ⏳ Дата поставки: <b>${date}</b>
+        `;
+
+        function submitMaterial(event) {
+            event.preventDefault();
+            const material = document.getElementById('mat-name').value;
+            const qty = document.getElementById('mat-qty').value;
+            
+            const orderData = {
+                project: project,
+                section: section,
+                date: date,
+                material: material,
+                quantity: qty,
+                status: "🔴 Новая"
+            };
+
+            if (tg && tg.sendData) {
+                tg.sendData(JSON.stringify(orderData));
+                tg.close();
+            } else {
+                alert('Заявка сформирована (вне Telegram)');
+                console.log(orderData);
+            }
         }
-    }
-</script>
+    </script>
+</body>
+</html>
