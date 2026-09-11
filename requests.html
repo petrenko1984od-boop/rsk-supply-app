@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSK Odessa - Заявки на материалы</title>
+    <!-- Tailwind CSS для красивого интерфейса -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 max-w-6xl mx-auto">
+
+    <!-- Шапка страницы -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6 flex flex-col md:flex-row justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">📦 Заявки на материалы</h1>
+            <p class="text-sm text-gray-500">Система снабжения и контроля объектов (RSK Odessa)</p>
+        </div>
+        <!-- Навигация между страницами -->
+        <div class="flex gap-2 mt-4 md:mt-0">
+            <a href="index.html" class="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition">📈 На главную (Гант)</a>
+            <button onclick="openModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg shadow transition">+ Новая заявка</button>
+        </div>
+    </div>
+
+    <!-- Основной блок с таблицей -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h2 class="text-xl font-bold text-gray-800">Активные заявки</h2>
+            <span class="text-xs text-gray-400">Всего заявок: <span id="counter">2</span></span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 text-xs uppercase">
+                        <th class="p-3">№</th>
+                        <th class="p-3">Объект</th>
+                        <th class="p-3">Материал</th>
+                        <th class="p-3">Кол-во</th>
+                        <th class="p-3">Статус</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-table" class="text-sm text-gray-700 divide-y">
+                    <tr>
+                        <td class="p-3">1</td>
+                        <td class="p-3">Объект №1</td>
+                        <td class="p-3">Цемент М-500 (мешки)</td>
+                        <td class="p-3">50 шт</td>
+                        <td class="p-3"><span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">🟡 На согласовании</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-3">2</td>
+                        <td class="p-3">Объект №2</td>
+                        <td class="p-3">Арматура Ø12 мм</td>
+                        <td class="p-3">1.2 т</td>
+                        <td class="p-3"><span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">🟢 Закуплено</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно для создания заявки -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Новая заявка на материалы</h3>
+            <form id="material-form" onsubmit="submitMaterial(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Выберите объект:</label>
+                    <select id="modal-project" class="w-full border rounded-lg p-2 text-sm">
+                        <option>Объект №1 (Жилой дом)</option>
+                        <option>Объект №2 (Каркас ангара)</option>
+                        <option>Объект №3 (Ремонт офиса)</option>
+                        <option>Объект №4 (Подвод коммуникаций)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Наименование материала:</label>
+                    <input type="text" id="modal-material" required placeholder="например, Бетон В25" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Количество и единицы:</label>
+                    <input type="text" id="modal-qty" required placeholder="например, 15 куб.м" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg">Отмена</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg">Отправить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function submitMaterial(event) {
+            event.preventDefault();
+            const project = document.getElementById('modal-project').value;
+            const material = document.getElementById('modal-material').value;
+            const qty = document.getElementById('modal-qty').value;
+            
+            const table = document.getElementById('requests-table');
+            const rowCount = table.rows.length + 1;
+            document.getElementById('counter').innerText = rowCount;
+            
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td class="p-3">${rowCount}</td>
+                <td class="p-3">${project}</td>
+                <td class="p-3">${material}</td>
+                <td class="p-3">${qty}</td>
+                <td class="p-3"><span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">🟡 На согласовании</span></td>
+            `;
+            
+            closeModal();
+            document.getElementById('material-form').reset();
+        }
+    </script>
+</body>
+</html>
