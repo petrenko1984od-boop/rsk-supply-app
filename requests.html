@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSK Odessa - Ввод материалов</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем Telegram Web App скрипт -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body class="bg-gray-50 p-4 max-w-lg mx-auto font-sans">
@@ -13,7 +12,7 @@
     <div class="bg-white rounded-xl shadow-md p-6 mt-4">
         <h2 class="text-xl font-bold text-gray-800 mb-2">📦 Добавление материалов</h2>
         <div id="info-block" class="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg mb-4">
-            <!-- Сюда подставятся данные из бота -->
+            Загрузка параметров...
         </div>
 
         <form id="material-form" onsubmit="submitMaterial(event)">
@@ -34,15 +33,16 @@
     <script>
         // Инициализация Telegram Web App
         let tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
 
-        // Читаем параметры из URL, которые передал бот
+        // Читаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const project = urlParams.get('proj') || 'Не указан';
         const section = urlParams.get('sec') || 'Не указан';
         const date = urlParams.get('date') || 'Срочно';
 
-        // Выводим информацию о выбранном объекте вверху формы
+        // Отображаем параметры на форме
         document.getElementById('info-block').innerHTML = `
             🏢 Объект: <b>${project}</b><br>
             📁 Раздел: <b>${section}</b><br>
@@ -51,24 +51,28 @@
 
         function submitMaterial(event) {
             event.preventDefault();
-            const material = document.getElementById('mat-name').value;
-            const qty = document.getElementById('mat-qty').value;
             
+            const material = document.getElementById('mat-name').value.trim();
+            const quantity = document.getElementById('mat-qty').value.trim();
+            
+            if (!material || !quantity) {
+                alert('Пожалуйста, заполните все поля!');
+                return;
+            }
+
             const orderData = {
                 project: project,
                 section: section,
                 date: date,
                 material: material,
-                quantity: qty,
-                status: "🔴 Новая"
+                quantity: quantity
             };
 
             if (tg && tg.sendData) {
+                // Отправляем данные боту. Telegram автоматически закроет WebApp после успешной отправки.
                 tg.sendData(JSON.stringify(orderData));
-                tg.close();
             } else {
-                alert('Заявка сформирована (вне Telegram)');
-                console.log(orderData);
+                alert('Ошибка: Telegram WebApp недоступен');
             }
         }
     </script>
